@@ -1,0 +1,15 @@
+{
+  "originHash" : "f2091821bcd504591b3f371f9b79f3e7a29e6a2da9ccf304cb01746251cc0126",
+  "pins" : [
+    {
+      "identity" : "fetchkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/blastum/FetchKit.git",
+      "state" : {
+        "branch" : "trunk",
+        "revision" : "d3bb5cb4142966797f9cf75db972c4e4d1666821"
+      }
+    }
+  ],
+  "version" : 3
+}
