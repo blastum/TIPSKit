@@ -15,7 +15,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/blastum/FetchKit.git", branch: "trunk"),
+        .package(url: "https://github.com/blastum/FetchKit.git", branch: "master"),
     ],
     targets: [
         .target(
