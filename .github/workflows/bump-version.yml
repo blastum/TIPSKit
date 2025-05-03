@@ -14,17 +14,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Important to fetch tags
+          fetch-depth: 0  # Fetch all tags and history
 
       - name: Fetch all tags
         run: git fetch --tags
 
-      - name: Get latest tag
+      - name: Get latest tag (by date)
         id: get_tag
         run: |
           set -e
-          latest=$(git describe --tags --abbrev=0)
-          echo "Latest tag: $latest"
+          latest=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          echo "Latest semantic version tag: $latest"
           echo "latest_tag=$latest" >> $GITHUB_OUTPUT
 
       - name: Bump patch version
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -e
           tag="${{ steps.get_tag.outputs.latest_tag }}"
-          version="${tag#v}"  # Remove leading 'v' if present
+          version="${tag#v}"  # Strip 'v' prefix if present
           major=$(echo "$version" | cut -d. -f1)
           minor=$(echo "$version" | cut -d. -f2)
           patch=$(echo "$version" | cut -d. -f3)
