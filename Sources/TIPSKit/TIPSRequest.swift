@@ -50,14 +50,14 @@ public enum Sort<Field: CodingKey> {
 
 @available(macOS 12.0, *)
 public enum TIPSRequest: Endpoint {
-    case summary(
+    case summary2(
         filters: (any Collection<Filter<TIPSSummary.CodingKeys>>)? = nil,
         sort: (any Collection<Sort<TIPSSummary.CodingKeys>>)? = nil,
         pageSize: Int? = nil,
         pageNumber: Int? = nil
     )
 
-    case detail(
+    case detail2(
         filters: (any Collection<Filter<TIPSDetail.CodingKeys>>)? = nil,
         sort: (any Collection<Sort<TIPSDetail.CodingKeys>>)? = nil,
         pageSize: Int? = nil,
@@ -83,12 +83,12 @@ public enum TIPSRequest: Endpoint {
         decoder.dateDecodingStrategy = .iso8601
 
         switch self {
-        case .summary:
+        case .summary2:
             let wrapper = try decoder.decode(ResponseWrapper<TIPSSummary>.self, from: data)
-            return .summary(wrapper.data)
-        case .detail:
+            return .summary2(wrapper.data)
+        case .detail2:
             let wrapper = try decoder.decode(ResponseWrapper<TIPSDetail>.self, from: data)
-            return .detail(wrapper.data)
+            return .detail2(wrapper.data)
         }
     }
 
@@ -97,9 +97,9 @@ public enum TIPSRequest: Endpoint {
     private static let baseURL = URL(string: "https://api.fiscaldata.treasury.gov/services/api/fiscal_service")!
     private var path: String {
         switch self {
-        case .summary:
+        case .summary2:
             return "/v1/accounting/od/tips_cpi_data_summary"
-        case .detail:
+        case .detail2:
             return "/v1/accounting/od/tips_cpi_data_detail"
         }
     }
@@ -107,12 +107,12 @@ public enum TIPSRequest: Endpoint {
     private var queryItems: [URLQueryItem]? {
         let filtersItem: URLQueryItem? = {
             switch self {
-            case let .summary(filters, _, _, _):
+            case let .summary2(filters, _, _, _):
                 filters
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "filter", value: $0) }
 
-            case let .detail(filters, _, _, _):
+            case let .detail2(filters, _, _, _):
                 filters
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "filter", value: $0) }
@@ -121,12 +121,12 @@ public enum TIPSRequest: Endpoint {
 
         let sortItem: URLQueryItem? = {
             switch self {
-            case let .summary(_, sort, _, _):
+            case let .summary2(_, sort, _, _):
                 sort
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "sort", value: $0) }
 
-            case let .detail(_, sort, _, _):
+            case let .detail2(_, sort, _, _):
                 sort
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "sort", value: $0) }
@@ -135,16 +135,16 @@ public enum TIPSRequest: Endpoint {
 
         let pageSizeItem: URLQueryItem? = {
             switch self {
-            case let .summary(_, _, pageSize, _),
-                 let .detail(_, _, pageSize, _):
+            case let .summary2(_, _, pageSize, _),
+                 let .detail2(_, _, pageSize, _):
                 pageSize.map { URLQueryItem(name: "page[size]", value: "\($0)") }
             }
         }()
 
         let pageNumberItem: URLQueryItem? = {
             switch self {
-            case let .summary(_, _, _, pageNumber),
-                 let .detail(_, _, _, pageNumber):
+            case let .summary2(_, _, _, pageNumber),
+                 let .detail2(_, _, _, pageNumber):
                 return pageNumber.map { URLQueryItem(name: "page[number]", value: "\($0)") }
             }
         }()

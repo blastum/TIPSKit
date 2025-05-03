@@ -8,6 +8,6 @@
 import Foundation
 
 public enum TIPSResponse {
-    case summary([TIPSSummary])
-    case detail([TIPSDetail])
+    case summary2([TIPSSummary])
+    case detail2([TIPSDetail])
 }
