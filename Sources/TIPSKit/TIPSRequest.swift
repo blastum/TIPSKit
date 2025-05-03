@@ -50,15 +50,19 @@ public enum Sort<Field: CodingKey> {
 
 @available(macOS 12.0, *)
 public enum TIPSRequest: Endpoint {
-    case summary(filters: [Filter<TIPSSummary.CodingKeys>]? = nil,
-                 sort: [Sort<TIPSSummary.CodingKeys>]? = nil,
-                 pageSize: Int? = nil,
-                 pageNumber: Int? = nil)
+    case summary(
+        filters: (any Collection<Filter<TIPSSummary.CodingKeys>>)? = nil,
+        sort: (any Collection<Sort<TIPSSummary.CodingKeys>>)? = nil,
+        pageSize: Int? = nil,
+        pageNumber: Int? = nil
+    )
 
-    case detail(filters: [Filter<TIPSDetail.CodingKeys>]? = nil,
-                sort: [Sort<TIPSDetail.CodingKeys>]? = nil,
-                pageSize: Int? = nil,
-                pageNumber: Int? = nil)
+    case detail(
+        filters: (any Collection<Filter<TIPSDetail.CodingKeys>>)? = nil,
+        sort: (any Collection<Sort<TIPSDetail.CodingKeys>>)? = nil,
+        pageSize: Int? = nil,
+        pageNumber: Int? = nil
+    )
 
     // MARK: Endpoint
 
