@@ -16,6 +16,9 @@ jobs:
         with:
           fetch-depth: 0  # Important to fetch tags
 
+      - name: Fetch all tags
+        run: git fetch --tags
+
       - name: Get latest tag
         id: get_tag
         run: |
@@ -35,10 +38,11 @@ jobs:
           echo "New tag: $new_tag"
           echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
-      - name: Create and push tag
+      - name: Push new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag ${{ steps.bump_version.outputs.new_tag }}
-          git push origin ${{ steps.bump_version.outputs.new_tag }}
-
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} ${{ steps.bump_version.outputs.new_tag }}
