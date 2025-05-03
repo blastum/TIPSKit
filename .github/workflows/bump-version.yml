@@ -22,6 +22,7 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
+          set -e
           latest=$(git describe --tags --abbrev=0)
           echo "Latest tag: $latest"
           echo "latest_tag=$latest" >> $GITHUB_OUTPUT
@@ -29,10 +30,12 @@ jobs:
       - name: Bump patch version
         id: bump_version
         run: |
-          tag=${{ steps.get_tag.outputs.latest_tag }}
-          major=$(echo $tag | cut -d. -f1 | tr -d v)
-          minor=$(echo $tag | cut -d. -f2)
-          patch=$(echo $tag | cut -d. -f3)
+          set -e
+          tag="${{ steps.get_tag.outputs.latest_tag }}"
+          version="${tag#v}"  # Remove leading 'v' if present
+          major=$(echo "$version" | cut -d. -f1)
+          minor=$(echo "$version" | cut -d. -f2)
+          patch=$(echo "$version" | cut -d. -f3)
           patch=$((patch + 1))
           new_tag="v$major.$minor.$patch"
           echo "New tag: $new_tag"
@@ -42,7 +45,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ steps.bump_version.outputs.new_tag }}
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} ${{ steps.bump_version.outputs.new_tag }}
+          git tag "${{ steps.bump_version.outputs.new_tag }}"
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" "${{ steps.bump_version.outputs.new_tag }}"
