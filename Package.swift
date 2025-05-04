@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "TIPSKit",
     platforms: [
-        .macOS(.v15)
+        .macOS(.v15),
     ],
     products: [
         .library(
@@ -15,7 +15,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/blastum/FetchKit.git", "1.0.0"..<"1.1.0"),
+        .package(url: "https://github.com/blastum/FetchKit.git", "1.0.0" ..< "1.1.0"),
+//        .package(path: "../FetchKit"),
     ],
     targets: [
         .target(

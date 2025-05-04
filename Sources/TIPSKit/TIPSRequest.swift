@@ -16,7 +16,7 @@ public enum Filter<Field: CodingKey> {
     case gt(Field, String)
     case gte(Field, String)
     case equal(Field, String)
-    case `in`(Field, [String])
+    case `in`(Field, any Collection<String>)
 
     public func asQueryComponent() -> String {
         switch self {
@@ -50,14 +50,18 @@ public enum Sort<Field: CodingKey> {
 
 @available(macOS 12.0, *)
 public enum TIPSRequest: Endpoint {
-    case summary2(
+    public typealias Output = TIPSResponse
+
+    public typealias Failure = Error
+
+    case summary(
         filters: (any Collection<Filter<TIPSSummary.CodingKeys>>)? = nil,
         sort: (any Collection<Sort<TIPSSummary.CodingKeys>>)? = nil,
         pageSize: Int? = nil,
         pageNumber: Int? = nil
     )
 
-    case detail2(
+    case detail(
         filters: (any Collection<Filter<TIPSDetail.CodingKeys>>)? = nil,
         sort: (any Collection<Sort<TIPSDetail.CodingKeys>>)? = nil,
         pageSize: Int? = nil,
@@ -78,17 +82,18 @@ public enum TIPSRequest: Endpoint {
         return request
     }
 
-    public func decode(_ data: Data) throws -> TIPSResponse {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        switch self {
-        case .summary2:
-            let wrapper = try decoder.decode(ResponseWrapper<TIPSSummary>.self, from: data)
-            return .summary2(wrapper.data)
-        case .detail2:
-            let wrapper = try decoder.decode(ResponseWrapper<TIPSDetail>.self, from: data)
-            return .detail2(wrapper.data)
+    public func decode(_ result: Result<(Data, URLResponse), any Error>) -> Result<TIPSResponse, any Failure> {
+        result.flatMap { data, _ in
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return switch self {
+            case .summary:
+                decoder.decodeResult(ResponseWrapper<TIPSSummary>.self, from: data)
+                    .map { .summary($0.data) }
+            case .detail:
+                decoder.decodeResult(ResponseWrapper<TIPSDetail>.self, from: data)
+                    .map { .detail($0.data) }
+            }
         }
     }
 
@@ -97,9 +102,9 @@ public enum TIPSRequest: Endpoint {
     private static let baseURL = URL(string: "https://api.fiscaldata.treasury.gov/services/api/fiscal_service")!
     private var path: String {
         switch self {
-        case .summary2:
+        case .summary:
             return "/v1/accounting/od/tips_cpi_data_summary"
-        case .detail2:
+        case .detail:
             return "/v1/accounting/od/tips_cpi_data_detail"
         }
     }
@@ -107,12 +112,12 @@ public enum TIPSRequest: Endpoint {
     private var queryItems: [URLQueryItem]? {
         let filtersItem: URLQueryItem? = {
             switch self {
-            case let .summary2(filters, _, _, _):
+            case let .summary(filters, _, _, _):
                 filters
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "filter", value: $0) }
 
-            case let .detail2(filters, _, _, _):
+            case let .detail(filters, _, _, _):
                 filters
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "filter", value: $0) }
@@ -121,12 +126,12 @@ public enum TIPSRequest: Endpoint {
 
         let sortItem: URLQueryItem? = {
             switch self {
-            case let .summary2(_, sort, _, _):
+            case let .summary(_, sort, _, _):
                 sort
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "sort", value: $0) }
 
-            case let .detail2(_, sort, _, _):
+            case let .detail(_, sort, _, _):
                 sort
                     .map { $0.map { $0.asQueryComponent() }.joined(separator: ",") }
                     .flatMap { $0.isEmpty ? nil : URLQueryItem(name: "sort", value: $0) }
@@ -135,16 +140,16 @@ public enum TIPSRequest: Endpoint {
 
         let pageSizeItem: URLQueryItem? = {
             switch self {
-            case let .summary2(_, _, pageSize, _),
-                 let .detail2(_, _, pageSize, _):
+            case let .summary(_, _, pageSize, _),
+                 let .detail(_, _, pageSize, _):
                 pageSize.map { URLQueryItem(name: "page[size]", value: "\($0)") }
             }
         }()
 
         let pageNumberItem: URLQueryItem? = {
             switch self {
-            case let .summary2(_, _, _, pageNumber),
-                 let .detail2(_, _, _, pageNumber):
+            case let .summary(_, _, _, pageNumber),
+                 let .detail(_, _, _, pageNumber):
                 return pageNumber.map { URLQueryItem(name: "page[number]", value: "\($0)") }
             }
         }()
@@ -158,4 +163,12 @@ public enum TIPSRequest: Endpoint {
 
 private struct ResponseWrapper<T: Decodable>: Decodable {
     let data: [T]
+}
+
+// MARK: - JSONDecoder extension
+
+private extension JSONDecoder {
+    func decodeResult<T: Decodable>(_ type: T.Type, from data: Data) -> Result<T, Error> {
+        Result { try self.decode(T.self, from: data) }
+    }
 }
